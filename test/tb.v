@@ -1,6 +1,8 @@
 `default_nettype none
 `timescale 1ns/1ps
 
+/* This testbench wrapper is used by cocotb to drive inputs and monitor outputs 
+   of the expanded 3x2 tile MC14500B Microcontroller SoC. */
 module tb;
 
     // Simulation stimulus lines 
@@ -11,11 +13,13 @@ module tb;
     wire [7:0] uio_oe;
     reg clk;
     reg rst_n;
+    reg ena; // Add standard enable tracking line register here
 
     // Fix high-impedance injection by initializing simulator registers immediately
     initial begin
         clk = 0;
         rst_n = 0;
+        ena = 0;
         ui_in = 8'h00;
         uio_in = 8'h00;
     end
@@ -27,6 +31,7 @@ module tb;
         .uio_in  (uio_in),
         .uio_out (uio_out),
         .uio_oe  (uio_oe),
+        .ena     (ena), // Wire up the pin mapping path
         .clk     (clk),
         .rst_n   (rst_n)
     );
