@@ -1,8 +1,6 @@
 `default_nettype none
 `timescale 1ns/1ps
 
-/* This testbench wrapper is used by cocotb to drive inputs and monitor outputs 
-   of the expanded 3x2 tile MC14500B Microcontroller SoC. */
 module tb;
 
     // Simulation stimulus lines 
@@ -13,6 +11,14 @@ module tb;
     wire [7:0] uio_oe;
     reg clk;
     reg rst_n;
+
+    // Fix high-impedance injection by initializing simulator registers immediately
+    initial begin
+        clk = 0;
+        rst_n = 0;
+        ui_in = 8'h00;
+        uio_in = 8'h00;
+    end
 
     // Instantiate the upgraded 3x2 top-level module
     tt_um_mc14500b_soc_extended uut (
@@ -29,7 +35,6 @@ module tb;
     initial begin
         $dumpfile("tb.vcd");
         $dumpvars(0, tb);
-        #1;
     end
 
 endmodule
