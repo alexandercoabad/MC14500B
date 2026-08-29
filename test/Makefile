@@ -22,14 +22,25 @@ COMPILE_ARGS    += -DGL_TEST
 COMPILE_ARGS    += -DFUNCTIONAL
 COMPILE_ARGS    += -DSIM
 COMPILE_ARGS    += -s tb
-
-# THE ABSOLUTE IHP PDK FIX:
-# Passing -gno-specify ensures Icarus skips regular specify blocks.
 COMPILE_ARGS    += -gno-specify
 
-# Order matters: Include the libraries, then your generated netlist
-VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_stdcell/verilog/sg13g2_stdcell.v
+# AUTOMATED AUTOMATION FIX:
+# Copy the IHP library file locally and use sed to strip the unsupported "ifnone" timing lines
+# before iverilog parses it. This completely bypasses the simulator bugs.
+IHP_CELL_SRC = $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_stdcell/verilog/sg13g2_stdcell.v
+LOCAL_CELL_SRC = $(PWD)/sg13g2_stdcell_patched.v
+
+# Insert pre-compilation rule to patch the IHP cells file
+_patch_ihp_lib:
+	@cp $(IHP_CELL_SRC) $(LOCAL_CELL_SRC)
+	@sed -i '/ifnone.*edge-sensitive/d' $(LOCAL_CELL_SRC)
+	@sed -i '/ifnone.*=>/d' $(LOCAL_CELL_SRC)
+
+VERILOG_SOURCES += $(LOCAL_CELL_SRC)
 VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
+
+# Hook the patch step into the simulation compilation dependency tree
+sim_build/gl/sim.vvp: _patch_ihp_lib
 
 endif
 
@@ -45,3 +56,7 @@ COCOTB_TEST_MODULES = test
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
+
+# Ensure patched files are removed during make clean execution blocks
+clean::
+	rm -f $(PWD)/sg13g2_stdcell_patched.v
