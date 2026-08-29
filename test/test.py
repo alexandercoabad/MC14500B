@@ -7,7 +7,7 @@ async def test_mc14500b_extended_soc(dut):
     """Verify 3x2 extended SoC ROM operations and parallel IO bus tracking loop"""
     dut._log.info("Booting Extended SoC 3x2 Verification Engine...")
 
-    # Launch background simulation clock loop at 50 MHz (Fix: unit instead of units)
+    # Launch background simulation clock loop at 50 MHz 
     cocotb.start_soon(Clock(dut.clk, 20, unit="ns").start())
 
     # Hardware initialization reset sequence
@@ -37,7 +37,7 @@ async def test_mc14500b_extended_soc(dut):
             dut._log.warning(f"Step {step:02d} | uio_out contains unresolvable X/Z states: {dut.uio_out.value.binstr}")
             continue
 
-        # Fix: Use to_unsigned() instead of deprecated .integer
+        # Extract values using non-deprecated to_unsigned() method
         uio_val = dut.uio_out.value.to_unsigned()
         current_pc = uio_val & 0x3F          # Extract active Program Counter bits [5:0]
         core_rr = (uio_val >> 6) & 0x01      # Extract MCU core Result Register state bit
@@ -51,8 +51,9 @@ async def test_mc14500b_extended_soc(dut):
             f"WR: {write_pulse} | Parallel Out: 0x{parallel_out:02X}"
         )
 
-        # Functional validation checks
+        # Corrected functional validation checks
         if current_pc == 0x01:
+            # Step 1 executes Opcode 0x5 (OR) / 0x1 (LD). Ensure register stays a valid binary value.
             assert core_rr in, f"Malformed execution tracking at PC step {current_pc}"
             
     dut._log.info("Extended 3x2 tile MCU SoC verification sequence passed successfully!")
