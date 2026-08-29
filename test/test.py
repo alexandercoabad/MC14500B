@@ -11,6 +11,7 @@ async def test_mc14500b_extended_soc(dut):
     cocotb.start_soon(Clock(dut.clk, 20, unit="ns").start())
 
     # Hardware initialization reset sequence
+    dut.ena.value = 1       # Ensure the module is enabled for the test framework
     dut.rst_n.value = 0
     dut.ui_in.value = 0x00
     dut.uio_in.value = 0x00
