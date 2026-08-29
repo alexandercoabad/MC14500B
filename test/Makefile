@@ -23,10 +23,9 @@ COMPILE_ARGS    += -DFUNCTIONAL
 COMPILE_ARGS    += -DSIM
 COMPILE_ARGS    += -s tb
 
-# NATIVE FIX FOR IHP PDK IN ICARUS VERILOG:
-# Activating the native PDK preprocessor macro targets Icarus specifically 
-# to strip out problematic edge-sensitive timing rules before compilation.
-COMPILE_ARGS    += -DIVERILOG
+# NATIVE TINY TAPEOUT WORKAROUND FOR IHP / SIMULATOR PATH CONFLICTS:
+# Strips conditional paths (like ifnone with edge triggers) directly from the Icarus parser frontend.
+COMPILE_ARGS    += -gno-conditional-specify
 COMPILE_ARGS    += -gno-specify
 
 VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_io/verilog/sg13g2_io.v
