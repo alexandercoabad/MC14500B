@@ -51,9 +51,8 @@ async def test_mc14500b_extended_soc(dut):
             f"WR: {write_pulse} | Parallel Out: 0x{parallel_out:02X}"
         )
 
-        # Corrected functional validation checks
+        # Cleaned validation check: Ensure the output registers contain valid binary configurations
         if current_pc == 0x01:
-            # Step 1 executes an opcode. Check that the Result Register is cleanly 0 or 1.
-            assert core_rr in, f"Malformed execution tracking at PC step {current_pc}"
+            assert core_rr == 0 or core_rr == 1, f"Invalid state detected at PC step {current_pc}"
             
     dut._log.info("Extended 3x2 tile MCU SoC verification sequence passed successfully!")
