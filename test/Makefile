@@ -21,8 +21,13 @@ SIM_BUILD				= sim_build/gl
 COMPILE_ARGS    += -DGL_TEST
 COMPILE_ARGS    += -DFUNCTIONAL
 COMPILE_ARGS    += -DSIM
-# Avoid X-propagation simulation lockups in Icarus Verilog during GL tests
 COMPILE_ARGS    += -s tb
+
+# WORKAROUND FLAGS FOR IHP PDK CELL LIBRARIES IN ICARUS VERILOG:
+# -Ttyp selects typical cell timing; removing specify block evaluations fixes "ifnone" errors.
+COMPILE_ARGS    += -Ttyp
+# Bypasses the strict specify logic tree compilation checks causing vvp_net drops.
+COMPILE_ARGS    += -gno-specify
 
 VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_io/verilog/sg13g2_io.v
 VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_stdcell/verilog/sg13g2_stdcell.v
