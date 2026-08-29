@@ -23,8 +23,10 @@ COMPILE_ARGS    += -DFUNCTIONAL
 COMPILE_ARGS    += -DSIM
 COMPILE_ARGS    += -s tb
 
-# CORRECT WORKAROUND TO STRIP PATH HINTS FOR THE IHP OPEN PDK IN ICARUS VERILOG:
-# Disable timing-sensitive specify arcs entirely to prevent "ifnone" compilation aborts
+# NATIVE FIX FOR IHP PDK IN ICARUS VERILOG:
+# Activating the native PDK preprocessor macro targets Icarus specifically 
+# to strip out problematic edge-sensitive timing rules before compilation.
+COMPILE_ARGS    += -DIVERILOG
 COMPILE_ARGS    += -gno-specify
 
 VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_io/verilog/sg13g2_io.v
