@@ -1,7 +1,7 @@
 # Tiny Tapeout project information
 project:
   title:        "MC14500B Extended 1-bit Microcontroller SoC"
-  author:       "Your Name"
+  author:       "Alexander Co Abad"
   discord:      ""
   description:  "An advanced 1-bit MCU SoC containing an MC14500B Core, 256-word ROM, 16-bit RAM, and dual IO expansion ports"
   language:     "Verilog"
