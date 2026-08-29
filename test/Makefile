@@ -23,10 +23,10 @@ COMPILE_ARGS    += -DFUNCTIONAL
 COMPILE_ARGS    += -DSIM
 COMPILE_ARGS    += -s tb
 
-# WORKAROUND FLAGS FOR IHP PDK CELL LIBRARIES IN ICARUS VERILOG:
-# -Ttyp selects typical cell timing; removing specify block evaluations fixes "ifnone" errors.
-COMPILE_ARGS    += -Ttyp
-# Bypasses the strict specify logic tree compilation checks causing vvp_net drops.
+# CORRECT WORKAROUND FOR THE IHP OPEN PDK IN ICARUS VERILOG:
+# 1. Triggers the explicit uppercase conditional directive within 'sg13g2_stdcell.v' to bypass specify blocks.
+COMPILE_ARGS    += -DNO_SPECIFY
+# 2. Instructs the Icarus compiler parser to ignore internal layout pathway constraints gracefully.
 COMPILE_ARGS    += -gno-specify
 
 VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_io/verilog/sg13g2_io.v
