@@ -23,11 +23,12 @@ COMPILE_ARGS    += -DFUNCTIONAL
 COMPILE_ARGS    += -DSIM
 COMPILE_ARGS    += -s tb
 
-# TINY TAPEOUT IHP GL SIMULATION OVERRIDE:
-# Include the functional logic primitives directly, bypassing the specify-heavy vendor model files
-VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_stdcell/verilog/sg13g2_stdcell.v
+# THE ABSOLUTE IHP PDK FIX:
+# Passing -gno-specify ensures Icarus skips regular specify blocks.
+COMPILE_ARGS    += -gno-specify
 
-# This gets copied in by the GDS action workflow
+# Order matters: Include the libraries, then your generated netlist
+VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_stdcell/verilog/sg13g2_stdcell.v
 VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
 
 endif
