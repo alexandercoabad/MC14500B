@@ -53,7 +53,7 @@ async def test_mc14500b_extended_soc(dut):
 
         # Corrected functional validation checks
         if current_pc == 0x01:
-            # Step 1 executes Opcode. Ensure register stays a valid binary value.
+            # Step 1 executes an opcode. Check that the Result Register is cleanly 0 or 1.
             assert core_rr in, f"Malformed execution tracking at PC step {current_pc}"
             
     dut._log.info("Extended 3x2 tile MCU SoC verification sequence passed successfully!")
