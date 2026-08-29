@@ -23,15 +23,11 @@ COMPILE_ARGS    += -DFUNCTIONAL
 COMPILE_ARGS    += -DSIM
 COMPILE_ARGS    += -s tb
 
-# NATIVE TINY TAPEOUT WORKAROUND FOR IHP / SIMULATOR PATH CONFLICTS:
-# Strips conditional paths (like ifnone with edge triggers) directly from the Icarus parser frontend.
-COMPILE_ARGS    += -gno-conditional-specify
-COMPILE_ARGS    += -gno-specify
-
-VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_io/verilog/sg13g2_io.v
+# TINY TAPEOUT IHP GL SIMULATION OVERRIDE:
+# Include the functional logic primitives directly, bypassing the specify-heavy vendor model files
 VERILOG_SOURCES += $(PDK_ROOT)/ihp-sg13g2/libs.ref/sg13g2_stdcell/verilog/sg13g2_stdcell.v
 
-# this gets copied in by the GDS action workflow
+# This gets copied in by the GDS action workflow
 VERILOG_SOURCES += $(PWD)/gate_level_netlist.v
 
 endif
