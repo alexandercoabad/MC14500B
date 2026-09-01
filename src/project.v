@@ -11,18 +11,18 @@ module tt_um_mc14500b_soc_extended (
     input  wire       rst_n     // Active-low reset
 );
 
-    // --- Optimized Program Memory Size for Sky130 Fit ---
+    // --- Program Memory (64-byte RAM) ---
     reg [7:0] prog_memory [0:63]; 
     reg [15:0] ram_bank;          
     reg [5:0]  pc;                
     reg [7:0]  r_ext_out;         
 
-    // Programming Control Definitions
+    // Control signals
     wire prog_mode = uio_in[7];
     wire prog_we   = uio_in[6];
     wire [5:0] prog_addr = uio_in[5:0]; 
 
-    // CPU Logic Signals
+    // Decoding
     wire [7:0] current_instruction = prog_memory[pc];
     wire [3:0] opcode  = current_instruction[7:4];
     wire [3:0] operand = current_instruction[3:0];
@@ -42,7 +42,7 @@ module tt_um_mc14500b_soc_extended (
     assign core_write_en = (!prog_mode) && (!r_skip) && r_oen && ((opcode == 4'h8) || (opcode == 4'h9));
     assign core_flag_f   = (!prog_mode) && (!r_skip) && (opcode == 4'h0);
 
-    // --- Synchronous Write & Clear Logic ---
+    // Synchronous memory write & clear logic
     integer i;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -54,7 +54,7 @@ module tt_um_mc14500b_soc_extended (
         end
     end
 
-    // --- Core State Machine ---
+    // Core execution state machine
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             r_ext_out <= 8'h00;
@@ -90,7 +90,7 @@ module tt_um_mc14500b_soc_extended (
                     4'hC: ; 
                     4'hD: r_skip <= !r_rr;                 
                     4'hE: ; 
-                    4 me: ; 
+                    4'hF: ; 
                 endcase
             end
 
@@ -100,7 +100,7 @@ module tt_um_mc14500b_soc_extended (
         end
     end
 
-    // --- Port Mapping ---
+    // Outputs
     assign uo_out = r_ext_out;
 
     assign uio_out[5:0] = prog_mode ? 6'b000000 : pc;       
