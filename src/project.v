@@ -1,39 +1,29 @@
 `default_nettype none
 
 module tt_um_mc14500b_soc_extended (
-    input  wire [7:0] ui_in,    // Dedicated inputs (External Parallel Input Port)
-    output wire [7:0] uo_out,   // Dedicated outputs (External Parallel Output Port)
-    input  wire [7:0] uio_in,   // IO lines input path
-    output wire [7:0] uio_out,  // IO lines output path
-    output wire [7:0] uio_oe,   // IO lines output enable
-    input  wire       ena,      // Tiny Tapeout project select enable (ADD THIS LINE)
-    input  wire       clk,      // Clock signal
+    input  wire [7:0] ui_in,    // Run Mode: Parallel Input / Prog Mode: Data Byte
+    output wire [7:0] uo_out,   // Output Port
+    input  wire [7:0] uio_in,   // [7]=prog_mode, [6]=prog_we, [5:0]=prog_addr
+    output wire [7:0] uio_out,  // [7]=core_write_en, [6]=core_rr, [5:0]=pc[5:0]
+    output wire [7:0] uio_oe,   // Dynamic IO direction
+    input  wire       ena,      // Tiny Tapeout project enable
+    input  wire       clk,      // System clock
     input  wire       rst_n     // Active-low reset
 );
 
-    // --- SoC Architecture Memory Allocations & Map ---
-    // (Everything else inside this file remains exactly the same)
-    reg [7:0] rom_memory [0:255]; 
+    // --- Optimized Program Memory Size for Sky130 Fit ---
+    reg [7:0] prog_memory [0:63]; 
     reg [15:0] ram_bank;          
-    reg [7:0] pc;                
-    reg [7:0] r_ext_out;         
+    reg [5:0]  pc;                
+    reg [7:0]  r_ext_out;         
 
-    initial begin
-        rom_memory[0] = 8'h18; 
-        rom_memory[1] = 8'h59; 
-        rom_memory[2] = 8'h80; 
-        rom_memory[3] = 8'h10; 
-        rom_memory[4] = 8'hD0; 
-        rom_memory[5] = 8'h20; 
-        rom_memory[6] = 8'h81; 
-        rom_memory[7] = 8'h00; 
-        
-        for (integer i = 8; i < 256; i = i + 1) begin
-            rom_memory[i] = 8'h00; 
-        end
-    end
+    // Programming Control Definitions
+    wire prog_mode = uio_in[7];
+    wire prog_we   = uio_in[6];
+    wire [5:0] prog_addr = uio_in[5:0]; 
 
-    wire [7:0] current_instruction = rom_memory[pc];
+    // CPU Logic Signals
+    wire [7:0] current_instruction = prog_memory[pc];
     wire [3:0] opcode  = current_instruction[7:4];
     wire [3:0] operand = current_instruction[3:0];
 
@@ -49,29 +39,36 @@ module tt_um_mc14500b_soc_extended (
     
     assign core_rr       = r_rr;
     assign core_data_out = r_rr;
-    assign core_write_en = (!r_skip) && r_oen && ((opcode == 4'h8) || (opcode == 4'h9));
-    assign core_flag_f   = (!r_skip) && (opcode == 4'h0);
+    assign core_write_en = (!prog_mode) && (!r_skip) && r_oen && ((opcode == 4'h8) || (opcode == 4'h9));
+    assign core_flag_f   = (!prog_mode) && (!r_skip) && (opcode == 4'h0);
 
+    // --- Synchronous Write & Clear Logic ---
+    integer i;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            r_ext_out <= 8'h00;
-        end else begin
-            r_ext_out <= ram_bank[7:0];
+            for (i = 0; i < 64; i = i + 1) begin
+                prog_memory[i] <= 8'h00;
+            end
+        end else if (prog_mode && prog_we) begin
+            prog_memory[prog_addr] <= ui_in;
         end
     end
 
+    // --- Core State Machine ---
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            pc       <= 8'h00;
-            ram_bank <= 16'h0000;
-            r_rr     <= 1'b0;
-            r_oen    <= 1'b1;
-            r_ien    <= 1'b1;
-            r_skip   <= 1'b0;
+            r_ext_out <= 8'h00;
+            pc        <= 6'b000000;
+            ram_bank  <= 16'h0000;
+            r_rr      <= 1'b0;
+            r_oen     <= 1'b1;
+            r_ien     <= 1'b1;
+            r_skip    <= 1'b0;
+        end else if (prog_mode) begin
+            pc <= 6'b000000;
         end else begin
-            // You can optionally gate your circuit using (ena) here, 
-            // but for a classic MCU, running continuously is fine.
             pc <= pc + 1'b1;
+            r_ext_out <= ram_bank[7:0];
             ram_bank[15:8] <= ui_in;
 
             if (r_skip) begin
@@ -93,7 +90,7 @@ module tt_um_mc14500b_soc_extended (
                     4'hC: ; 
                     4'hD: r_skip <= !r_rr;                 
                     4'hE: ; 
-                    4'hF: ; 
+                    4 me: ; 
                 endcase
             end
 
@@ -103,10 +100,13 @@ module tt_um_mc14500b_soc_extended (
         end
     end
 
+    // --- Port Mapping ---
     assign uo_out = r_ext_out;
-    assign uio_out[5:0] = pc[5:0];       
-    assign uio_out[6]   = core_rr;       
-    assign uio_out[7]   = core_write_en; 
-    assign uio_oe       = 8'b11111111;   
+
+    assign uio_out[5:0] = prog_mode ? 6'b000000 : pc;       
+    assign uio_out[6]   = prog_mode ? 1'b0 : core_rr;       
+    assign uio_out[7]   = prog_mode ? 1'b0 : core_write_en; 
+    
+    assign uio_oe = prog_mode ? 8'b00000000 : 8'b11111111;   
 
 endmodule
